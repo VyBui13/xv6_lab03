@@ -5,7 +5,7 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
-
+static int printdeep=0;
 /*
  * the kernel's page table.
  */
@@ -447,5 +447,28 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return 0;
   } else {
     return -1;
+  }
+}
+
+void
+vmprint(pagetable_t pagetable)
+{
+  if (printdeep == 0)
+    printf("page table %p\n",pagetable);
+  for (int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+    if (pte & PTE_V) {
+      for (int j = 0; j <= printdeep; j++) {
+        printf(" ..");
+      }
+      printf("%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+    }
+    // pintes to lower-level page table
+    if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+      printdeep++;
+      uint64 child_pa = PTE2PA(pte);
+      vmprint((pagetable_t)child_pa);
+      printdeep--;
+    }
   }
 }
