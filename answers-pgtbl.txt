@@ -1,0 +1,9 @@
+Các system call(s) có thể tăng tốc khi sử dụng trang chia sẻ
+- uptime: 
+ + Mục đích: Trả về số lượng "ticks" kể từ khi hệ thống được khởi động
+ + Tối ưu bằng shared page: Lưu giá trị ticks hiện tại vào một trường trong cấu trúc usyscall trong shared page. Kernel sẽ cập nhật giá trị này định kỳ. Khi tiến trình người dùng gọi uptime(), nó có thể đọc trực tiếp từ trang chia sẻ mà không cần vào kernel.
+ + Hiệu năng: Loại bỏ việc chuyển vào kernel cho một thao tác đọc đơn giản, giảm độ trễ.
+- getuid và getgid:
+ + Mục đích: Trả về ID người dùng (uid) và ID nhóm (gid) của tiến trình gọi.
+ + Tối ưu: Thêm các trường uid và gid vào cấu trúc usyscall trong shared page. Các giá trị này thường hiếm khi thay đổi, vì vậy chúng có thể được thiết lập một lần trong quá trình khởi tạo tiến trình và ít khi cần cập nhật.
+ + Hiệu năng: Giảm các lần chuyển vào kernel khi truy vấn thông tin định danh tĩnh.
